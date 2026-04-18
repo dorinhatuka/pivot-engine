@@ -13,22 +13,29 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 contents: [{
                     parts: [{ text: `Analyze this business idea: "${idea}". 
-                                     Return ONLY a JSON object with two keys: 
-                                     "ops" and "market". 
-                                     No markdown formatting, no backticks.` }]
+                                     Return a JSON object with two keys: "ops" and "market". 
+                                     Keep it simple and clean.` }]
                 }]
             })
         });
 
         const data = await response.json();
+        
+        // בדיקה אם גוגל החזיר שגיאה (למשל מפתח לא תקין)
+        if (data.error) {
+            console.error('Google API Error:', data.error);
+            return res.status(500).json({ error: data.error.message });
+        }
+
         let text = data.candidates[0].content.parts[0].text;
         
+        // ניקוי תגיות markdown אם יש
         const cleanJson = text.replace(/```json|```/g, "").trim();
         const result = JSON.parse(cleanJson);
 
         res.status(200).json(result);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to analyze' });
+        console.error('Fetch Error:', error);
+        res.status(500).json({ error: 'Failed to process request', details: error.message });
     }
 }
