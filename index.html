@@ -160,7 +160,7 @@
 			/* Populates the report fields with calculated strategic insights */
 			async function showFinalReport(val) {
     try {
-        const response = await fetch('/api/analyze.js', {
+        const response = await fetch('/api/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ idea: val })
