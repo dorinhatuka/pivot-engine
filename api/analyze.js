@@ -9,32 +9,33 @@ export default async function handler(req, res) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     try {
-        // הכתובת המדויקת לפי התיעוד הכי מעודכן של 2026
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+        // שימוש במודל gemini-pro בגרסת v1 - השילוב הכי יציב שיש
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: `Analyze this idea: "${idea}". Return ONLY a JSON object: {"ops": "text", "market": "text"}.` }] }]
+                contents: [{ parts: [{ text: `Analyze this idea: "${idea}". Return ONLY a JSON object: {"ops": "3 key points", "market": "3 key points"}. No extra text.` }] }]
             })
         });
 
         const data = await response.json();
 
         if (data.error) {
-            // זה יחזיר לנו את השגיאה המדויקת מגוגל אם משהו עדיין לא בסדר
-            return res.status(data.error.code || 500).json({ error: data.error.message });
+            return res.status(500).json({ error: 'Google Error', message: data.error.message });
         }
 
         const rawText = data.candidates[0].content.parts[0].text;
+        
+        // חילוץ ה-JSON - מבטיח שגם אם גוגל מוסיף תגיות זה יעבוד
         const start = rawText.indexOf('{');
         const end = rawText.lastIndexOf('}') + 1;
         const jsonString = rawText.substring(start, end);
         
-        return res.status(200).json(JSON.parse(jsonString));
+        res.status(200).json(JSON.parse(jsonString));
 
     } catch (error) {
-        return res.status(500).json({ error: 'Server Error', message: error.message });
+        res.status(500).json({ error: 'Server Error', details: error.message });
     }
 }
