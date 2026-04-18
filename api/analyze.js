@@ -1,6 +1,12 @@
 export default async function handler(req, res) {
+    // מאפשר גישה מכל מקום כדי למנוע חסימות דפדפן
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
 
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -10,36 +16,33 @@ export default async function handler(req, res) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-        return res.status(500).json({ error: 'Missing API Key in Vercel settings' });
+        return res.status(500).json({ error: 'מפתח ה-API חסר בהגדרות Vercel' });
     }
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: `Analyze this idea for an Industrial Engineering student: "${idea}". Return JSON with keys "ops" and "market". Keep it professional.` }] }]
+                contents: [{ parts: [{ text: `Analyze this business idea: "${idea}". Return ONLY a JSON object with keys "ops" and "market". No extra text.` }] }]
             })
         });
 
         const data = await response.json();
-        
+
         if (data.error) {
-            return res.status(500).json({ error: 'Google API rejected the key', details: data.error });
+            return res.status(500).json({ error: 'שגיאה מצד גוגל', details: data.error.message });
         }
 
-        const text = data.candidates[0].content.parts[0].text;
-
-        // חילוץ ה-JSON בצורה חכמה למקרה שה-AI מוסיף טקסט מיותר
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error('Could not find JSON in AI response');
-        }
-
-        const result = JSON.parse(jsonMatch[0]);
-        res.status(200).json(result);
+        const rawText = data.candidates[0].content.parts[0].text;
+        // ניקוי תגיות קוד אם ה-AI הוסיף אותן
+        const cleanJson = rawText.replace(/```json|```/g, "").trim();
+        
+        res.status(200).json(JSON.parse(cleanJson));
 
     } catch (error) {
-        res.status(500).json({ error: 'Server Error', details: error.message });
+        res.status(500).json({ error: 'שגיאת שרת פנימית', details: error.message });
     }
 }
