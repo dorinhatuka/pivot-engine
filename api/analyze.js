@@ -1,6 +1,5 @@
-import fetch from 'node-fetch';
-
 export default async function handler(req, res) {
+    // הגדרות גישה (CORS)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -13,25 +12,31 @@ export default async function handler(req, res) {
     if (!apiKey) return res.status(500).json({ error: "Missing API Key" });
 
     try {
-        // שימוש בנתיב הרשמי והמעודכן ביותר ל-2026
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-        
-        const response = await fetch(url, {
+        // שימוש ב-Native fetch שקיים ב-Vercel כברירת מחדל
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: `Analyze this idea: "${idea}". Return ONLY a JSON object: {"ops": "text", "market": "text"}.` }] }]
+                contents: [{ parts: [{ text: `Analyze this idea: "${idea}". Return ONLY a JSON object: {"ops": "text", "market": "text"}. No markdown.` }] }]
             })
         });
 
         const data = await response.json();
-        if (data.error) return res.status(500).json({ error: data.error.message });
+
+        if (data.error) {
+            return res.status(500).json({ error: "Google API Error", message: data.error.message });
+        }
 
         const rawText = data.candidates[0].content.parts[0].text;
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         
-        res.status(200).json(JSON.parse(jsonMatch[0]));
+        // חילוץ ה-JSON בצורה הכי בטוחה שיש
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("AI did not return valid JSON");
+        
+        return res.status(200).json(JSON.parse(jsonMatch[0]));
+
     } catch (error) {
-        res.status(500).json({ error: "Execution Error", details: error.message });
+        // זה ידפיס לך ב-Network את הסיבה המדויקת אם זה עדיין נכשל
+        return res.status(500).json({ error: "Server Error", details: error.message });
     }
 }
