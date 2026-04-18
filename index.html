@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<title>Pivot Engine | Dorin Hatuka</title>
+
+				<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+					<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+					<style>
+						:root {
+						/* System color palette definition */
+						--bg-color: #fdfbfb;
+						--card-bg: #ffffff;
+						--accent-soft: #fbc2eb;
+						--accent-warm: #a6c1ee;
+						--text-main: #2d3436;
+						--text-muted: #636e72;
+						}
+
+						body {
+						font-family: 'Plus Jakarta Sans', sans-serif;
+						background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+						margin: 0;
+						display: flex;
+						justify-content: center;
+						align-items: center;
+						min-height: 100vh;
+						padding: 20px;
+						}
+
+						.app-container {
+						width: 100%;
+						max-width: 440px;
+						background: var(--card-bg);
+						padding: 50px 40px;
+						border-radius: 45px;
+						box-shadow: 0 15px 45px rgba(0, 0, 0, 0.03);
+						text-align: center;
+						box-sizing: border-box;
+						border: 1px solid rgba(255, 255, 255, 0.8);
+						}
+
+						.hidden { display: none; }
+
+						h1 { font-size: 32px; font-weight: 700; margin: 0 0 12px 0; color: var(--text-main); letter-spacing: -0.8px; }
+						.subtitle { font-size: 15px; color: var(--text-muted); margin: 0 0 35px 0; line-height: 1.6; }
+
+						textarea {
+						width: 100%; height: 140px; padding: 22px; border: 2px solid #f1f2f6;
+						border-radius: 28px; font-size: 15px; box-sizing: border-box;
+						font-family: inherit; transition: 0.3s; background: #fff; color: var(--text-main);
+						resize: none;
+						}
+						textarea:focus { outline: none; border-color: var(--accent-soft); }
+
+						.btn {
+						width: 100%; padding: 18px;
+						border: none; border-radius: 28px; font-size: 16px; font-weight: 600;
+						cursor: pointer; margin-top: 15px; transition: 0.4s ease;
+						font-family: inherit;
+						}
+
+						.btn-primary {
+						background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+						color: white;
+						box-shadow: 0 10px 20px rgba(166, 193, 238, 0.3);
+						margin-top: 25px;
+						}
+						.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 25px rgba(251, 194, 235, 0.4); }
+						.btn-secondary { background: #f1f2f6; color: var(--text-main); }
+
+						.loading-percent { font-size: 55px; font-weight: 800; background: linear-gradient(to right, #fbc2eb, #a6c1ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+						.progress-track { width: 100%; height: 8px; background: #f1f2f6; border-radius: 10px; overflow: hidden; margin-top: 20px; }
+						.progress-thumb { width: 0%; height: 100%; background: linear-gradient(to right, #fbc2eb, #a6c1ee); transition: width 0.3s ease; }
+
+						.report-card {
+						background: #fdfdfd; padding: 24px; border-radius: 28px;
+						text-align: left; margin-top: 20px; border: 1px solid #f1f2f6;
+						}
+						.report-label { font-size: 11px; font-weight: 800; color: #a6c1ee; text-transform: uppercase; letter-spacing: 1px; }
+						.report-value { font-size: 14px; color: var(--text-main); line-height: 1.6; margin-top: 8px; font-weight: 500; }
+
+						.footer-credit {
+						margin-top: 45px;
+						padding-top: 20px;
+						border-top: 1px solid #f8f9fa;
+						font-size: 11px;
+						color: var(--text-muted);
+						letter-spacing: 0.5px;
+						}
+						.handle { color: var(--text-muted); font-weight: 400; }
+					</style>
+				</head>
+	<body>
+
+		<div class="app-container" id="screen-start">
+			<h1>Pivot Engine</h1>
+			<p class="subtitle">Personalized analysis for operational efficiency and strategic business growth.</p>
+			<textarea id="ideaText" placeholder="Describe your concept or process idea..."></textarea>
+			<button class="btn btn-primary" onclick="simulateProcess()">Analyze</button>
+			<div class="footer-credit">
+				© 2026 Designed & Developed by <span class="handle">Dorin Hatuka</span>
+			</div>
+		</div>
+
+		<div class="app-container hidden" id="screen-wait">
+			<div class="loading-percent" id="perc">0%</div>
+			<p style="color: var(--text-muted); margin-top: 10px; font-size: 14px;">Running Strategic Simulations...</p>
+			<div class="progress-track">
+				<div class="progress-thumb" id="thumb"></div>
+			</div>
+		</div>
+
+		<div class="app-container hidden" id="screen-finish">
+			<h1>Strategy Report</h1>
+			<div class="report-card">
+				<span class="report-label">Operational Strategy</span>
+				<p class="report-value" id="res-ops"></p>
+			</div>
+			<div class="report-card">
+				<span class="report-label">Market Potential</span>
+				<p class="report-value" id="res-market"></p>
+			</div>
+
+			<button class="btn btn-primary" id="export-btn" onclick="exportPDF()">Export Report</button>
+			<button class="btn btn-secondary" onclick="location.reload()">New Analysis</button>
+
+			<div class="footer-credit">
+				© 2026 Designed & Developed by <span class="handle">Dorin Hatuka</span>
+			</div>
+		</div>
+
+		<script>
+			/* Manages UI transitions and progress bar animation during the analysis phase */
+			function simulateProcess() {
+			const text = document.getElementById('ideaText').value;
+			if(!text) return alert("Please share an idea to begin.");
+
+			document.getElementById('screen-start').classList.add('hidden');
+			document.getElementById('screen-wait').classList.remove('hidden');
+
+			let p = 0;
+			const thumb = document.getElementById('thumb');
+			const perc = document.getElementById('perc');
+
+			const timer = setInterval(() => {
+			p += Math.floor(Math.random() * 10) + 2;
+			if(p >= 100) {
+			p = 100;
+			clearInterval(timer);
+			showFinalReport(text);
+			}
+			perc.innerText = p + "%";
+			thumb.style.width = p + "%";
+			}, 160);
+			}
+
+			/* Populates the report fields with calculated strategic insights */
+			function showFinalReport(val) {
+			setTimeout(() => {
+			let ops, mkt;
+			const input = val.toLowerCase();
+
+			/* Basic classification logic for demonstration */
+			if(input.includes('service') || input.includes('app')) {
+			ops = "Focus on reducing user friction and automating manual data entry to save significant operational time.";
+			mkt = "Aim for high scalability by prioritizing fast user acquisition and tracking core retention metrics.";
+			} else {
+			ops = "Smooth out the workflow stages to ensure consistent output and avoid common process delays.";
+			mkt = "Focus on building high-quality operations and long-term customer relationships for niche stability.";
+			}
+
+			document.getElementById('res-ops').innerText = ops;
+			document.getElementById('res-market').innerText = mkt;
+
+			document.getElementById('screen-wait').classList.add('hidden');
+			document.getElementById('screen-finish').classList.remove('hidden');
+			}, 400);
+			}
+
+			/* Captures the result card and triggers a PDF file download */
+			function exportPDF() {
+			const element = document.getElementById('screen-finish');
+			const btn1 = document.getElementById('export-btn');
+			const btn2 = btn1.nextElementSibling;
+
+			btn1.style.display = 'none';
+			btn2.style.display = 'none';
+
+			const opt = {
+			margin: 10,
+			filename: 'Strategy-Report.pdf',
+			image: { type: 'jpeg', quality: 0.98 },
+			html2canvas: { scale: 2 },
+			jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+			};
+
+			html2pdf().set(opt).from(element).save().then(() => {
+			btn1.style.display = 'block';
+			btn2.style.display = 'block';
+			});
+			}
+		</script>
+
+	</body>
+</html>
