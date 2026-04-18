@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-    // הגדרת כותרות כדי למנוע בעיות דפדפן
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST');
 
@@ -10,7 +9,6 @@ export default async function handler(req, res) {
     const { idea } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // בדיקה פנימית - אם המפתח בכלל קיים במערכת
     if (!apiKey) {
         return res.status(500).json({ error: 'Missing API Key in Vercel settings' });
     }
@@ -31,10 +29,17 @@ export default async function handler(req, res) {
         }
 
         const text = data.candidates[0].content.parts[0].text;
-        const cleanJson = text.replace(/```json|```/g, "").trim();
-        res.status(200).json(JSON.parse(cleanJson));
+
+        // חילוץ ה-JSON בצורה חכמה למקרה שה-AI מוסיף טקסט מיותר
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error('Could not find JSON in AI response');
+        }
+
+        const result = JSON.parse(jsonMatch[0]);
+        res.status(200).json(result);
 
     } catch (error) {
-        res.status(500).json({ error: 'Server Crash', details: error.message });
+        res.status(500).json({ error: 'Server Error', details: error.message });
     }
 }
