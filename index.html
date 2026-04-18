@@ -158,27 +158,31 @@
 			}
 
 			/* Populates the report fields with calculated strategic insights */
-			function showFinalReport(val) {
-			setTimeout(() => {
-			let ops, mkt;
-			const input = val.toLowerCase();
+			async function showFinalReport(val) {
+    try {
+        const response = await fetch('/api/analyze.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idea: val })
+        });
 
-			/* Basic classification logic for demonstration */
-			if(input.includes('service') || input.includes('app')) {
-			ops = "Focus on reducing user friction and automating manual data entry to save significant operational time.";
-			mkt = "Aim for high scalability by prioritizing fast user acquisition and tracking core retention metrics.";
-			} else {
-			ops = "Smooth out the workflow stages to ensure consistent output and avoid common process delays.";
-			mkt = "Focus on building high-quality operations and long-term customer relationships for niche stability.";
-			}
+        if (!response.ok) throw new Error('API request failed');
 
-			document.getElementById('res-ops').innerText = ops;
-			document.getElementById('res-market').innerText = mkt;
+        const data = await response.json();
 
-			document.getElementById('screen-wait').classList.add('hidden');
-			document.getElementById('screen-finish').classList.remove('hidden');
-			}, 400);
-			}
+        // כאן אנחנו מחברים את התשובות מה-AI למסך שלך
+        document.getElementById('res-ops').innerText = data.ops;
+        document.getElementById('res-market').innerText = data.market;
+
+        // מעבר למסך התוצאות
+        document.getElementById('screen-wait').classList.add('hidden');
+        document.getElementById('screen-finish').classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert("הייתה בעיה בחיבור לבינה המלאכותית. ודאי שהגדרת את המפתח ב-Vercel.");
+    }
+}
 
 			/* Captures the result card and triggers a PDF file download */
 			function exportPDF() {
